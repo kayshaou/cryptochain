@@ -94,7 +94,7 @@ describe('Blockchain()', () => {
             })
             describe('and the chain is invalid', () => {
                 beforeEach(() => {
-                    //tamper
+                    //tampered with
                     newchain.chain[2].hash = 'some-fake-hash';
                     blockchain.replaceChain(newchain.chain);
                 });
@@ -109,10 +109,15 @@ describe('Blockchain()', () => {
                 })
             })
             describe('and the chain is valid', () => {
-                it('replaces the chain', () => {
+                beforeEach(() => {
                     // chain must be replaced
                     blockchain.replaceChain(newchain.chain);
+                })
+                it('replaces the chain', () => {
                     expect(blockchain.chain).toEqual(newchain.chain);
+                });
+                it('logs about chain replacement', () => {
+                    expect(logMock).toHaveBeenCalled();
                 })
             });
 

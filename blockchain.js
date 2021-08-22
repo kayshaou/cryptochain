@@ -15,7 +15,7 @@ class Blockchain {
         if (JSON.stringify(chainarray[0]) !== JSON.stringify(Block.genesis())) return false;
 
         for (let idx = 1; idx < chainarray.length; idx++) {
-            const { timestamp, lastHash, hash, data } = chainarray[idx];
+            const { timestamp, lastHash, hash, data, nonce, difficulty } = chainarray[idx];
             // compare lasthash must be same as currentHash
             //// extract last hash 
             const prevHash = chainarray[idx - 1].hash;
@@ -23,7 +23,7 @@ class Blockchain {
             if (prevHash !== lastHash) return false;
 
             // check if the hash is correctly encrypted
-            const validatedHash = cryptoHash(timestamp, prevHash, data);
+            const validatedHash = cryptoHash(timestamp, prevHash, data, nonce, difficulty);
 
             if (hash !== validatedHash) return false;
         }
@@ -32,7 +32,7 @@ class Blockchain {
     }
     // cannot be static cos it based on the individual instance.
     replaceChain(chainarray) {
-        if (chain.length <= this.chain.length) {
+        if (chainarray.length <= this.chain.length) {
             console.error('The incoming chain must be longer')
             return;
         }
