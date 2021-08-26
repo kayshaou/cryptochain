@@ -19,6 +19,7 @@ class Blockchain {
             // compare lasthash must be same as currentHash
             //// extract last hash 
             const prevHash = chainarray[idx - 1].hash;
+            const prevDiff = chainarray[idx - 1].difficulty;
             //// then compare w current hash
             if (prevHash !== lastHash) return false;
 
@@ -26,6 +27,8 @@ class Blockchain {
             const validatedHash = cryptoHash(timestamp, prevHash, data, nonce, difficulty);
 
             if (hash !== validatedHash) return false;
+
+            if (Math.abs(prevDiff - difficulty) > 1) return false;
         }
         // if all are well then it will reach this return point
         return true;

@@ -1,6 +1,6 @@
 const Blockchain = require("./blockchain");
 const Block = require("./block");
-
+const cryptoHash = require("./crypto-hash");
 describe('Blockchain()', () => {
     // when test runs its in random order. we need to reset it before the new test case is executed
     let blockchain, newchain, originalchain;
@@ -52,6 +52,29 @@ describe('Blockchain()', () => {
 
                 });
             });
+
+            describe('and the chain contains a block with a jumped difficulty', () => {
+                it('returns false ', () => {
+                    // lastblock
+                    const lastBlock = blockchain.chain[blockchain.chain.length - 1];
+                    const lastHash = lastBlock.hash;
+                    const timestamp = Date.now();
+                    const nonce = 0;
+                    const data = [];
+                    const difficulty = lastBlock.difficulty - 3; // purposedly set to a jump
+
+                    // add the bad block into the chain hence the whole chain will be invalid
+                    const hash = cryptoHash(timestamp, lastHash, data, nonce, difficulty);
+                    const nBlock = new Block({
+                        timestamp, lastHash,
+                        hash, data, nonce, difficulty
+                    })
+                    blockchain.chain.push(nBlock);
+
+                    expect(Blockchain.isValidChain(blockchain)).toBe(false);
+                })
+            });
+
 
             describe('add the chain does not contain any invalid blocks', () => {
                 it('returns true', () => {

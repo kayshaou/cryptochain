@@ -1,5 +1,7 @@
 const { GENESIS_BLOCK, MINE_RATE } = require('./config')
 const cryptoHash = require('./crypto-hash')
+const hexToBinary = require('hex-to-binary');
+
 class Block {
     constructor({ timestamp, lastHash, hash, data, nonce, difficulty }) { //curly braces; so we dont have to rmb the order to params passed in
         this.timestamp = timestamp;
@@ -18,13 +20,14 @@ class Block {
         let hash, timestamp;
         // const timestamp = Date.now();
         const lastHash = lastBlock.hash;
-        const { difficulty } = lastBlock;
+        let { difficulty } = lastBlock;
         let nonce = 0; // this will be dynamic
         do {
             nonce++;
-            timestamp = Date.now()
+            timestamp = Date.now();
+            difficulty = Block.adjustDifficulty({ originalBlock: lastBlock, timestamp });
             hash = cryptoHash(timestamp, lastHash, data, nonce, difficulty);
-        } while (hash.substring(0, difficulty) !== '0'.repeat(difficulty));
+        } while (hexToBinary(hash).substring(0, difficulty) !== '0'.repeat(difficulty));
         // as long as the first 0 Ns (no of difficult do not equals N) keep increasing
 
         return new this({
@@ -39,6 +42,9 @@ class Block {
 
     static adjustDifficulty({ originalBlock, timestamp }) {
         const { difficulty } = originalBlock;
+
+        if (difficulty < 1) return 1;
+
         if ((timestamp - originalBlock.timestamp) > MINE_RATE) return difficulty - 1;
 
         return difficulty + 1;
