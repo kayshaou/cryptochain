@@ -1,14 +1,18 @@
 const redis = require("redis");
-const CHANNEL = {
-    TEST: 'TEST'
+const blockchain = require('./blockchain');
+const CHANNELS = {
+    TEST: 'TEST',
+    BLOCKCHAIN: 'BLOCKCHAIN'
 };
 
 class PubSub {
-    constructor() {
+    constructor({ blockchain }) {
         this.publisher = redis.createClient();
         this.subscriber = redis.createClient();
+        this.blockchain = blockchain;
 
-        this.subscriber.subscribe(CHANNEL.TEST);
+        this.subscribeToChannels(CHANNELS);
+
         this.subscriber.on('message',
             (channel, message) => {
                 this.handleMessage(channel, message)
@@ -17,10 +21,36 @@ class PubSub {
 
     handleMessage(channel, message) {
         console.log(`Message received. Channel ${channel} Message ${message}`)
+        const parsedMsg = JSON.parse(message);
+        if (channel === CHANNELS.BLOCKCHAIN) {
+            this.blockchain.replaceChain(parsedMsg);
+        }
+    }
+
+    subscribeToChannels() {
+        Object.values(CHANNELS).forEach(channel => {
+            this.subscriber.subscribe(channel);
+        })
+    }
+
+    publish({ channel, message }) {
+        this.subscriber.unsubscribe(channel, () => {
+            this.publisher.publish(channel, message, () => {
+                this.subscriber.subscribe(channel);
+            });
+        })
+
+    }
+
+    broadcastChain() {
+        this.publish({
+            channel: CHANNELS.BLOCKCHAIN,
+            message: JSON.stringify(this.blockchain.chain)
+        })
     }
 }
 
-const testPubSub = new PubSub();
-setTimeout(() => testPubSub.publisher.publish(CHANNEL.TEST, 'foo'), 1000);
+
+module.exports = PubSub;
 
 
